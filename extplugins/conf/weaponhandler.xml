@@ -1,0 +1,21 @@
+<configuration plugin="weaponhandler">
+    <!-- Configure the restricted weapons below. Simply add more entries following the layout if needed -->
+    <!-- Example:  (penalty can be warn or kick)
+    <weapon penalty="warn" rule="rule4" mod="MOD_GRENADE_SPLASH">frag_grenade_short_mp</weapon> 
+    -->
+    <weapons>
+	<!-- Grenade Launchers -->
+	<weapon penalty="warn" rule="rule3" mod="MOD_GRENADE_SPLASH">gl_ak47_mp</weapon>
+	<weapon penalty="warn" rule="rule3" mod="MOD_GRENADE_SPLASH">gl_g3_mp</weapon>
+	<weapon penalty="warn" rule="rule3" mod="MOD_GRENADE_SPLASH">gl_g36c_mp</weapon>
+	<weapon penalty="warn" rule="rule3" mod="MOD_GRENADE_SPLASH">gl_m4_mp</weapon>
+	<weapon penalty="warn" rule="rule3" mod="MOD_GRENADE_SPLASH">gl_m14_mp</weapon>
+	<weapon penalty="warn" rule="rule3" mod="MOD_GRENADE_SPLASH">gl_m16_mp</weapon>
+	<weapon penalty="warn" rule="rule3" mod="MOD_GRENADE_SPLASH">gl_mp</weapon>
+	<!-- RPG -->
+	<weapon penalty="warn" rule="rule3" mod="MOD_PROJECTILE_SPLASH">rpg_mp</weapon>
+	<!--Martyr-->
+	<weapon penalty="warn" rule="rule4" mod="MOD_GRENADE_SPLASH">frag_grenade_short_mp</weapon>
+    </weapons>
+</configuration>
+
