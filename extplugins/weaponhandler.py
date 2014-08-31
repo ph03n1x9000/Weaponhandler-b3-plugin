@@ -13,9 +13,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 # August 29, 2014 - v1.0.0 - Initial release
+# August 31, 2014 - v1.0.1 - Made functions cleaner, added verbose and debug messages.
 
-
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 __author__  = 'ph03n1x'
 
 from b3 import clients
@@ -68,7 +68,11 @@ class WeaponhandlerPlugin(b3.plugin.Plugin):
         
 
     def onEvent(self, event):
-        if event.type == b3.events.EVT_CLIENT_KILL or event.type ==  b3.events.EVT_CLIENT_DAMAGE:
+        if event.type == b3.events.EVT_CLIENT_KILL:
+            weaponID = event.data[1]
+            mod = event.data[3]
+            self.handleWeapon(weaponID, mod, event.client)
+        elif event.type ==  b3.events.EVT_CLIENT_DAMAGE:
             weaponID = event.data[1]
             mod = event.data[3]
             self.handleWeapon(weaponID, mod, event.client)
@@ -77,7 +81,9 @@ class WeaponhandlerPlugin(b3.plugin.Plugin):
         for weaponInfo in self._weaponRestrict:
             try:
                 if weaponInfo._weaponID == weaponID:
+                    self.verbose('weaponID matches a restriction')
                     if weaponInfo._mod == mod:
+                        self.verbose('mod also matches a restriction..penalizing')
                         wrule = weaponInfo._rule
                         wpenalty = weaponInfo._penalty
                         if (wpenalty == ""):
@@ -89,5 +95,22 @@ class WeaponhandlerPlugin(b3.plugin.Plugin):
                         elif (wpenalty == "kick"):
                             self.verbose('kicking player')
                             player.kick(wrule, '', none)
+                        else:
+                            self.debug('Error in penalty definition')
+                    elif (weaponInfo._mod == ""):
+                        self.verbose('No mod defined. Continuing')
+                        wrule = weaponInfo._rule
+                        wpenalty = weaponInfo._penalty
+                        if (wpenalty == ""):
+                            self.verbose('No penalty defined. Warning player')
+                            self._adminPlugin.warnClient(player, wrule , None, False)
+                        elif (wpenalty == "warn"):
+                            self.verbose('Warning player')
+                            self._adminPlugin.warnClient(player, wrule , None, False)
+                        elif (wpenalty == "kick"):
+                            self.verbose('kicking player')
+                            player.kick(wrule, '', none)
+                        else:
+                            self.debug('Error in penalty definition')
             except:
                 self.debug('Unknown error occured')  
