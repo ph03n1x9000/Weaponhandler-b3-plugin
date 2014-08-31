@@ -18,3 +18,11 @@ This plugin has only been tested in Call of Duty 4. Any feedback on other CoD re
 
 
 
+=========================================
+KNOWN ISSUES:
+
+# Geowelcome Plugin breaks the functions of this plugin due to the time delay in Geowelcome's messages;
+If the game server has players connecting and disconnecting quickly (popular or high traffic servers), 
+Geowelcome is caught up processing several player welcome messages. 
+If this plugin is supposed to penalize a player while Geowelcome is processing messages, 
+the penalty may not work. -- Solution: Use Location plugin instead of Geowelcome --
