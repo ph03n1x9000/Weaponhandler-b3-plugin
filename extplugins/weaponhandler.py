@@ -12,105 +12,99 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-# August 29, 2014 - v1.0.0 - Initial release
-# August 31, 2014 - v1.0.1 - Made functions cleaner, added verbose and debug messages.
+# Uses the logic of AntiNoob plugin for B3
 
-__version__ = '1.0.1'
-__author__  = 'ph03n1x'
+__version__ = '1.2.0'
+__author__ = 'ph03n1x'
 
-from b3 import clients
-import b3, string, re, threading
-import b3.events
-import b3.plugin
+from b3.plugin import Plugin
 
 
 class WeaponInfo:
-    _weaponID = ""
-    _mod = ""
-    _rule = ""
-    _penalty = ""
+    def __init__(self, weapon, mod, rule, penalty):
+        self.weaponID = weapon
+        self.mod = mod
+        self.rule = rule
+        self.penalty = penalty
+
 
 # ------------------------------------------------------------------------ #
-
-class WeaponhandlerPlugin(b3.plugin.Plugin):
-    _weaponRestrict = []
-
+class WeaponhandlerPlugin(Plugin):
+    _adminplugin = None
+    weaponrestrictlist = []
 
     def onStartup(self):
-        self.registerEvent(b3.events.EVT_CLIENT_KILL)
-        self.registerEvent(b3.events.EVT_CLIENT_DAMAGE)
-        self._adminPlugin = self.console.getPlugin('admin')
+        self.registerEvent('EVT_CLIENT_KILL', self.onkillordamage)
+        self.registerEvent('EVT_CLIENT_DAMAGE', self.onkillordamage)
+        self._adminplugin = self.console.getPlugin('admin')
 
-        if not self._adminPlugin:
+        if not self._adminplugin:
             self.error('Could not find admin plugin')
             return
 
     def onLoadConfig(self):
-        self.debug('Loading Configuration Started')
-        for e in self.config.get('weapons/weapon'): 
-            _wi = WeaponInfo()
-            if e.text:
-                _wi._weaponID = e.text
+        for entry in self.config.get('penalties/weapon'):  # Load penalties
+            if entry.text:
+                weapon = entry.text
             else:
-                _wi._weaponID = ""
-                
-            _wi._mod = e.get('mod')
-            _wi._rule = e.get('rule')
-            _wi._penalty = e.get('penalty')
+                weapon = ''
+            mod = entry.get('mod')
+            rule = entry.get('rule')
+            penalty = entry.get('penalty')
             
-            if (_wi._mod != "" or _wi._weaponID != ""):
-                self.debug('Weapon restriction loaded: >' + _wi._weaponID + '< Mod:>' + _wi._mod + '<rule:>' + _wi._rule + '<penalty:>' + _wi._penalty + '<')
-                self._weaponRestrict.append(_wi)
+            if mod != '' or weapon != '':
+                self.debug('Weapon penalty loaded: >' + weapon + '< Mod:>' +
+                           mod + '<rule:>' + rule + '<penalty:>' + penalty + '<')
+                self.weaponrestrictlist.append(WeaponInfo(weapon, mod, rule, penalty))
             else:
-                self.debug('Info: Empty settings ignored')        
-        self.debug('Loading Configuration Finished')
-        return
+                self.debug('Info: Empty settings ignored')
         
+    # -------------------------- EVENT HANDLING --------------------------------
+    def onkillordamage(self, event):
+        weapon = event.data[1]
+        mod = event.data[3]
+        self.handleweapon(weapon, mod, event.client)
 
-    def onEvent(self, event):
-        if event.type == b3.events.EVT_CLIENT_KILL:
-            weaponID = event.data[1]
-            mod = event.data[3]
-            self.handleWeapon(weaponID, mod, event.client)
-        elif event.type ==  b3.events.EVT_CLIENT_DAMAGE:
-            weaponID = event.data[1]
-            mod = event.data[3]
-            self.handleWeapon(weaponID, mod, event.client)
-
-    def handleWeapon(self, weaponID, mod, player):
-        for weaponInfo in self._weaponRestrict:
+    def handleweapon(self, weapon, mod, player):
+        """
+        Handle a kill or damage made with a weapon
+        :param weapon: The weapon used by player
+        :param mod: The weapon mod used
+        :param player: The player using the weapon
+        """
+        for weaponInfo in self.weaponrestrictlist:
             try:
-                if weaponInfo._weaponID == weaponID:
+                if weaponInfo.weaponID == weapon:
                     self.verbose('weaponID matches a restriction')
-                    if weaponInfo._mod == mod:
+                    if weaponInfo.mod == mod:
                         self.verbose('mod also matches a restriction..penalizing')
-                        wrule = weaponInfo._rule
-                        wpenalty = weaponInfo._penalty
-                        if (wpenalty == ""):
+                        wrule = weaponInfo.rule
+                        wpenalty = weaponInfo.penalty
+                        if wpenalty == '':
                             self.verbose('No penalty defined. Warning player')
-                            self._adminPlugin.warnClient(player, wrule , None, False)
-                        elif (wpenalty == "warn"):
+                            self._adminplugin.warnClient(player, wrule, None, False)
+                        elif wpenalty == "warn":
                             self.verbose('Warning player')
-                            self._adminPlugin.warnClient(player, wrule , None, False)
-                        elif (wpenalty == "kick"):
+                            self._adminplugin.warnClient(player, wrule, None, False)
+                        elif wpenalty == "kick":
                             self.verbose('kicking player')
-                            player.kick(wrule, '', none)
+                            player.kick(wrule, '', None)
                         else:
                             self.debug('Error in penalty definition')
-                    elif (weaponInfo._mod == ""):
+                    elif weaponInfo.mod == "":
                         self.verbose('No mod defined. Continuing')
-                        wrule = weaponInfo._rule
-                        wpenalty = weaponInfo._penalty
-                        if (wpenalty == ""):
+                        wrule = weaponInfo.rule
+                        wpenalty = weaponInfo.penalty
+                        if wpenalty == "":
                             self.verbose('No penalty defined. Warning player')
-                            self._adminPlugin.warnClient(player, wrule , None, False)
-                        elif (wpenalty == "warn"):
+                            self._adminplugin.warnClient(player, wrule, None, False)
+                        elif wpenalty == "warn":
                             self.verbose('Warning player')
-                            self._adminPlugin.warnClient(player, wrule , None, False)
-                        elif (wpenalty == "kick"):
+                            self._adminplugin.warnClient(player, wrule, None, False)
+                        elif wpenalty == "kick":
                             self.verbose('kicking player')
-                            player.kick(wrule, '', none)
+                            player.kick(wrule, '', None)
                         else:
                             self.debug('Error in penalty definition')
-            except:
-                self.debug('Unknown error occured')  
+            except Exception, e:
+                self.debug('Error: %s' % e)
